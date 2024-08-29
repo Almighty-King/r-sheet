@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+</body>
+</html>
+<script>
+    const canvas = document.getElementById('myCanvas');
+const context = canvas.getContext('2d');
+
+// 相机类
+class Camera {
+    constructor(x = 0, y = 0, scale = 1) {
+        this.position = { x, y };
+        this.scale = scale;
+    }
+
+    setPosition(x, y) {
+        this.position.x = x;
+        this.position.y = y;
+    }
+
+    setScale(scale) {
+        this.scale = scale;
+    }
+
+    getTransformMatrix() {
+        // 生成2D变换矩阵，考虑平移和缩放
+        return [
+            this.scale, 0, 0,
+            0, this.scale, 0,
+            -this.position.x * this.scale, -this.position.y * this.scale, 1
+        ];
+    }
+}
+
+const camera = new Camera(0, 0, 1);
+
+// 绘制底层图层
+function drawLayer1() {
+    context.save();
+    const matrix = camera.getTransformMatrix();
+    context.setTransform(
+        matrix[0], matrix[1],  // x轴缩放和倾斜
+        matrix[3], matrix[4],  // y轴缩放和倾斜
+        matrix[6], matrix[7]   // x轴平移和y轴平移
+    );
+    
+    // 示例绘制：绘制一个红色矩形
+    context.fillStyle = 'red';
+    context.fillRect(100, 100, 200, 200);
+    
+    context.restore();
+}
+
+// 绘制顶层图层
+function drawLayer2() {
+    context.save();
+    const matrix = camera.getTransformMatrix();
+    context.setTransform(
+        matrix[0], matrix[1],  // x轴缩放和倾斜
+        matrix[3], matrix[4],  // y轴缩放和倾斜
+        matrix[6], matrix[7]   // x轴平移和y轴平移
+    );
+    
+    // 示例绘制：绘制一个蓝色圆形
+    context.fillStyle = 'blue';
+    context.beginPath();
+    context.arc(400, 300, 100, 0, 2 * Math.PI);
+    context.fill();
+    
+    context.restore();
+}
+
+// 绘制所有图层
+function drawAllLayers() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    drawLayer1();
+    drawLayer2();
+}
+
+// 处理用户交互
+function handleScroll(event) {
+    const scrollSpeed = 10; // 滚动速度
+    switch (event.key) {
+        case 'ArrowUp':
+            camera.setPosition(camera.position.x, camera.position.y - scrollSpeed);
+            break;
+        case 'ArrowDown':
+            camera.setPosition(camera.position.x, camera.position.y + scrollSpeed);
+            break;
+        case 'ArrowLeft':
+            camera.setPosition(camera.position.x - scrollSpeed, camera.position.y);
+            break;
+        case 'ArrowRight':
+            camera.setPosition(camera.position.x + scrollSpeed, camera.position.y);
+            break;
+        case '+':
+            camera.setScale(camera.scale * 1.1);
+            break;
+        case '-':
+            camera.setScale(camera.scale / 1.1);
+            break;
+    }
+    drawAllLayers();
+}
+
+document.addEventListener('keydown', handleScroll);
+
+// 初始绘制
+drawAllLayers();
+</script>
